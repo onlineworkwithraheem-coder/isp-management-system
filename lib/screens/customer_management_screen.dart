@@ -107,17 +107,11 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
           orElse: () => BluetoothDevice('', ''), // placeholder
         );
         if ((found.address ?? '').isNotEmpty) {
-          // run but don't block init
+          // start connect but don't await so init can complete
           _connectPrinter(found);
         } else {
-          // If not bonded, attempt connectByMac (plugin may create device from address)
-          // Keep it non-blocking and safe
-          try {
-            final phantom = BluetoothDevice(mac, mac);
-            _connectPrinter(phantom);
-          } catch (e, st) {
-            debugPrint('Auto-connect phantom device failed: $e\n$st');
-          }
+          // If not bonded, skip phantom connect — require pairing first
+          debugPrint('Auto-connect skipped: device not bonded for MAC: $mac');
         }
       }
     } catch (e, st) {
@@ -145,6 +139,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
     });
 
     try {
+      // Attempt connection (do not call plugin methods that don't exist)
       await _bluetooth.connect(device);
       final connected = (await _bluetooth.isConnected) == true;
       if (!mounted) return;
@@ -967,11 +962,7 @@ Thank you for your payment!
                   _bluetooth.printCustom('Status: PAID (Thank You!)', 1, 1);
                   _bluetooth.printNewLine();
                   _bluetooth.printCustom('Online Payments:', 1, 1);
-                  _bluetooth.printCustom(
-                    'Easypaisa / JazzCash',
-                    1,
-                    1,
-                  );
+                  _bluetooth.printCustom('Easypaisa / JazzCash', 1, 1);
                   _bluetooth.printCustom('03142190181 (Muhammad Rafiq)', 1, 1);
                   _bluetooth.printNewLine();
                   _bluetooth.printCustom('For Complain: 03142190181', 1, 1);
